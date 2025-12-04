@@ -153,16 +153,16 @@ def _safe_read(sensor, timeout_ms=20, fallback_value=255):
         sensor._last_value = value
         return value
     except (RuntimeError, OSError):
-        return getattr(sensor, "_last_value", fallback_value)
+        return fallback_value
 
 
-def read_left(sensor_map, timeout_ms=10, fallback_value=255):
+def read_left(sensor_map, timeout_ms=20, fallback_value=80):
     return _safe_read(sensor_map["left"], timeout_ms=timeout_ms, fallback_value=fallback_value)
 
 
-def read_middle(sensor_map, timeout_ms=10, fallback_value=255): #20
+def read_middle(sensor_map, timeout_ms=20, fallback_value=60): #20
     return _safe_read(sensor_map["middle"], timeout_ms=timeout_ms, fallback_value=fallback_value)
 
 
-def read_right(sensor_map, timeout_ms=10, fallback_value=255):
+def read_right(sensor_map, timeout_ms=20, fallback_value=80):
     return _safe_read(sensor_map["right"], timeout_ms=timeout_ms, fallback_value=fallback_value)
