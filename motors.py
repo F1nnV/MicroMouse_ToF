@@ -94,6 +94,14 @@ def right_wall_follow(sensor_map):
     min_speed = 3
     max_speed = 40
 
+    # encoder-based stuck detection
+    last_left_ticks = encoders.left_ticks
+    last_right_ticks = encoders.right_ticks
+    last_encoder_change_time = time.ticks_ms()
+    stuck_timeout_ms = 1000  # 1 second with no encoder change
+    reverse_speed = -8
+    reverse_time_s = 0.5
+
     while True:
     
         now = time.ticks_ms()
@@ -130,6 +138,32 @@ def right_wall_follow(sensor_map):
         motor_speed_a(left_command)
         motor_speed_b(right_command)
 
+        # --- Stuck detection using encoders ---
+        current_left_ticks = encoders.left_ticks
+        current_right_ticks = encoders.right_ticks
+
+        if (current_left_ticks != last_left_ticks) or (current_right_ticks != last_right_ticks):
+            last_left_ticks = current_left_ticks
+            last_right_ticks = current_right_ticks
+            last_encoder_change_time = now
+        else:
+            # no change in encoder counts; check for timeout
+            if time.ticks_diff(now, last_encoder_change_time) >= stuck_timeout_ms:
+                # robot appears stuck: reverse briefly to free it
+                motorstop()
+                time.sleep(0.1)
+                motor_speed_a(-8)
+                motor_speed_b(-7)
+                time.sleep(reverse_time_s)
+                motorstop()
+
+                # reset tracking and continue
+                last_left_ticks = encoders.left_ticks
+                last_right_ticks = encoders.right_ticks
+                last_encoder_change_time = time.ticks_ms()
+                prev_time = last_encoder_change_time
+                continue
+
         front_value = read_middle(sensor_map)
 
         if front_value <= 80:
@@ -137,7 +171,7 @@ def right_wall_follow(sensor_map):
             motor_speed_a(5)
             motor_speed_b(5)
 
-            if (front_value <= 45) and (left_value <= 55):
+            if (front_value <= 35) and (left_value <= 60):
                 motorstop()
                 time.sleep(0.2)
                 map_turn_by(90)
@@ -150,7 +184,7 @@ def right_wall_follow(sensor_map):
                 right_value = 100
                 motor_speed_a(8)
                 motor_speed_b(8)
-            elif(front_value <= 45) and (right_value <= 55):
+            elif(front_value <= 35) and (right_value <= 60):
                 motorstop()
                 time.sleep(0.2)
                 map_turn_by(-90)
@@ -162,36 +196,38 @@ def right_wall_follow(sensor_map):
                 left_value = 100
                 right_value = 100
                 
-            elif (front_value <= 45) and (left_value >= 100) and (right_value >= 100):
+            elif (front_value <= 30) and (left_value >= 120) and (right_value >= 120):
                 map_turn_by(90)
                 speed = 8
                 boot = 0
+                time.sleep(1)
             else: 
                 speed = 8
                 motor_speed_a(8)
                 motor_speed_b(8)
                 boot = 0
-        elif right_value > 180:
+        if right_value >= 140: # if gap
                 boot = boot + 1
-                if right_value <= 79:
-                    boot = 0 
-                elif (boot > 18) and (front_value >= 180):
+                print("boot",boot)
+
+                if (boot > 20) and (front_value > 120):# if no wall for x time
                     motorstop()
                     time.sleep(0.2)
                     map_turn_by(90)
                     boot = 0
                     time.sleep(1) 
- 
+        elif right_value <= 70: # if wall
+                    boot = 0 
 
             #add solid wall counter too 
 
-        if front_value < 18:
-            motorstop()
-            time.sleep(0.2)
-            motor_speed_a(-8)
-            motor_speed_b(-8)
-            time.sleep(1)
-            motorstop()
+        #if front_value < 18:
+        #    motorstop()
+        #    time.sleep(0.2)
+        #    motor_speed_a(-8)
+        #    motor_speed_b(-8)
+        #    time.sleep(1)
+        #    motorstop()
         
         prev_error_alignment = error_alignment
         prev_time = now
