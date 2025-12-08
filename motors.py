@@ -64,7 +64,7 @@ def motorstop(): #stop all motion
 
 
 def map_turn_by(degrees):
-    times = 0.50
+    times = 0.45
     
     if degrees == 90:
         motorstop()
@@ -82,7 +82,7 @@ def map_turn_by(degrees):
 def right_wall_follow(sensor_map):
     prev_error_alignment = 0
     drive_scale = 1
-    kp_alignment = 0.10
+    kp_alignment = 0.08
     kd_alignment = 0
     speed = 8
     sleep_time = 0
@@ -100,7 +100,7 @@ def right_wall_follow(sensor_map):
     last_encoder_change_time = time.ticks_ms()
     stuck_timeout_ms = 1000  # 1 second with no encoder change
     reverse_speed = -8
-    reverse_time_s = 0.5
+    reverse_time_s = 0.6
 
     while True:
     
@@ -153,7 +153,7 @@ def right_wall_follow(sensor_map):
                 motorstop()
                 time.sleep(0.1)
                 motor_speed_a(-8)
-                motor_speed_b(-7)
+                motor_speed_b(-8)
                 time.sleep(reverse_time_s)
                 motorstop()
 
@@ -166,7 +166,7 @@ def right_wall_follow(sensor_map):
 
         front_value = read_middle(sensor_map)
 
-        if front_value <= 80:
+        if front_value <= 60:
             speed = 5
             motor_speed_a(5)
             motor_speed_b(5)
@@ -210,7 +210,7 @@ def right_wall_follow(sensor_map):
                 boot = boot + 1
                 print("boot",boot)
 
-                if (boot > 20) and (front_value > 120):# if no wall for x time
+                if (boot > 21) and (front_value > 120):# if no wall for x time
                     motorstop()
                     time.sleep(0.2)
                     map_turn_by(90)
